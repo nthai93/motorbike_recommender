@@ -168,6 +168,13 @@ if parts and not os.path.exists(os.path.join(model_dir, "tfidf_index.index.index
         zip_ref.extractall(model_dir)
     print("✅ Unzipped tfidf_index.index.index.npy")
 
+# --- Kiểm tra file sau khi unzip ---
+import os
+st.write("📁 Files in model folder:", os.listdir("model"))
+if not os.path.exists("model/tfidf_index.index"):
+    st.error("❌ Missing model/tfidf_index.index — check unzip result or rename file inside ZIP.")
+else:
+    st.success("✅ Found model/tfidf_index.index, ready to load.")
 
 
 df, dictionary, tfidf_model, index, texts, model_w2v = load_model()
