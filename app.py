@@ -157,33 +157,24 @@ def load_model():
     return df, dictionary, tfidf_model, index, texts, model_w2v
 # 🧩 AUTO REBUILD TFIDF INDEX (for any number of parts)
 # ============================================================
-import os, zipfile
+# ============================================================
+# 🧩 AUTO-UNZIP TFIDF INDEX (Compressed for GitHub)
+# ============================================================
+import zipfile, os
 
-model_dir = "model"
-parts = sorted(
-    [os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.startswith("tfidf_index_part_")],
-    key=lambda x: x.lower()
-)
-output = os.path.join(model_dir, "tfidf_index.zip")
+zip_path = "model/tfidf_index_index.zip"
+target_path = "model/tfidf_index.index"
 
-# ✅ Tự động nối lại (kể cả khi chỉ có 1 file)
-if parts and not os.path.exists(os.path.join(model_dir, "tfidf_index.index.index.npy")):
-    with open(output, "wb") as wfd:
-        for part in parts:
-            with open(part, "rb") as fd:
-                wfd.write(fd.read())
-    print(f"✅ Recombined {len(parts)} file(s) → {output}")
-    with zipfile.ZipFile(output, "r") as zip_ref:
-        zip_ref.extractall(model_dir)
-    print("✅ Unzipped tfidf_index.index.index.npy")
+# Nếu chưa có file index mà có zip → giải nén
+if not os.path.exists(target_path) and os.path.exists(zip_path):
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall("model")
+    print("✅ Unzipped tfidf_index_index.zip → tfidf_index.index")
 
-# --- Kiểm tra file sau khi unzip ---
-import os
-st.write("📁 Files in model folder:", os.listdir("model"))
-if not os.path.exists("model/tfidf_index.index"):
-    st.error("❌ Missing model/tfidf_index.index — check unzip result or rename file inside ZIP.")
-else:
-    st.success("✅ Found model/tfidf_index.index, ready to load.")
+# Kiểm tra kết quả
+print("📁 Files in model folder:")
+print(os.listdir("model"))
+
 
 
 df, dictionary, tfidf_model, index, texts, model_w2v = load_model()
