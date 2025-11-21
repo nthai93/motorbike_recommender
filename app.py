@@ -133,22 +133,6 @@ div[data-testid="stToolbar"] {
 </style>
 """, unsafe_allow_html=True)
 
-import os
-
-parts = ["model/tfidf_index_part_aa", "model/tfidf_index_part_ab"]
-output = "model/tfidf_index.zip"
-
-# Nối lại
-with open(output, "wb") as wfd:
-    for part in parts:
-        with open(part, "rb") as fd:
-            wfd.write(fd.read())
-
-# Giải nén
-import zipfile
-with zipfile.ZipFile(output, "r") as zip_ref:
-    zip_ref.extractall("model")
-
 
 # ============================================================
 # 🔧 LOAD MODEL
@@ -162,19 +146,28 @@ def load_model():
     texts = joblib.load("model/texts.pkl")
     model_w2v = Word2Vec.load("model/w2v_model.pkl")
     return df, dictionary, tfidf_model, index, texts, model_w2v
-
-# ============================================================
-# 🧩 AUTO-REBUILD TFIDF INDEX IF ONLY ONE ZIP FILE EXISTS
+# 🧩 AUTO REBUILD TFIDF INDEX (for any number of parts)
 # ============================================================
 import os, zipfile
 
-zip_path = "model/tfidf_index_part_00.zip"
-rebuild_path = "model/tfidf_index.index.index.npy"
+model_dir = "model"
+parts = sorted(
+    [os.path.join(model_dir, f) for f in os.listdir(model_dir) if f.startswith("tfidf_index_part_")],
+    key=lambda x: x.lower()
+)
+output = os.path.join(model_dir, "tfidf_index.zip")
 
-if os.path.exists(zip_path) and not os.path.exists(rebuild_path):
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall("model")
+# ✅ Tự động nối lại (kể cả khi chỉ có 1 file)
+if parts and not os.path.exists(os.path.join(model_dir, "tfidf_index.index.index.npy")):
+    with open(output, "wb") as wfd:
+        for part in parts:
+            with open(part, "rb") as fd:
+                wfd.write(fd.read())
+    print(f"✅ Recombined {len(parts)} file(s) → {output}")
+    with zipfile.ZipFile(output, "r") as zip_ref:
+        zip_ref.extractall(model_dir)
     print("✅ Unzipped tfidf_index.index.index.npy")
+
 
 
 df, dictionary, tfidf_model, index, texts, model_w2v = load_model()
