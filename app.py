@@ -148,7 +148,22 @@ if os.path.exists(npy_path) and not os.path.exists(gensim_index_path):
 # ============================================================
 @st.cache_resource
 def load_model():
-    df = pd.read_csv("data/motorbike_clean.csv")
+    import io
+
+    file_path = "data/motorbike_clean.csv"
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"❌ File not found: {file_path}")
+
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read().strip()
+
+    if not content:
+        raise ValueError("❌ CSV file is empty or unreadable. Check encoding or upload again.")
+
+    df = pd.read_csv(io.StringIO(content))
+    print(f"✅ Loaded dataset successfully: {df.shape}")
+
     dictionary = corpora.Dictionary.load("model/dictionary.dict")
     tfidf_model = models.TfidfModel.load("model/tfidf_gensim.model")
     index = similarities.MatrixSimilarity.load("model/tfidf_index.index")
