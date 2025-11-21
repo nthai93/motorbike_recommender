@@ -15,6 +15,7 @@ from gensim.utils import simple_preprocess
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.pyplot as plt
 import seaborn as sns
+import chardet
 
 # ============================================================
 # 🧭 PAGE CONFIGURATION
@@ -132,76 +133,31 @@ div[data-testid="stToolbar"] {
 }
 </style>
 """, unsafe_allow_html=True)
-# --- Nếu chỉ có file .npy thì tạo bản .index đúng chuẩn gensim ---
-import os, shutil
 
-npy_path = "model/tfidf_index.index.index.npy"
-gensim_index_path = "model/tfidf_index.index"
-
-if os.path.exists(npy_path) and not os.path.exists(gensim_index_path):
-    shutil.move(npy_path, gensim_index_path)
-    st.success("✅ Renamed tfidf_index.index.index.npy → tfidf_index.index")
 
 
 # ============================================================
 # 🔧 LOAD MODEL
 # ============================================================
-# ============================================================
-# 🔧 LOAD MODEL (SAFE)
-# ============================================================
+
 @st.cache_resource
 def load_model():
-    import chardet
+    # detect encoding of CSV
     data_path = "data/motorbike_clean.csv"
-
-    # --- Detect encoding ---
     with open(data_path, 'rb') as f:
-        raw = f.read(200000)
-    enc = chardet.detect(raw)['encoding']
+        enc = chardet.detect(f.read(200000))['encoding']
+    df = pd.read_csv(data_path, encoding=enc)
+    if df.empty:
+        raise ValueError("❌ CSV file is empty or unreadable.")
 
-    try:
-        df = pd.read_csv(data_path, encoding=enc)
-        if df.empty:
-            raise ValueError("❌ CSV file is empty.")
-    except Exception as e:
-        raise ValueError(f"❌ Error reading CSV ({enc}): {e}")
-
-    # --- Load core models ---
+    # load gensim components
     dictionary = corpora.Dictionary.load("model/dictionary.dict")
     tfidf_model = models.TfidfModel.load("model/tfidf_gensim.model")
-    texts = joblib.load("model/texts.pkl")   # <-- phải load trước khi build index
-    from gensim.models import KeyedVectors
-
-    model_w2v = KeyedVectors.load_word2vec_format("model/w2v_vectors.txt", binary=False)
-
-
-    # 🚀 Rebuild MatrixSimilarity if tfidf_index.index is missing
-    if not os.path.exists("model/tfidf_index.index"):
-        st.warning("⚙️ Rebuilding TF-IDF index (first time only)...")
-        corpus = [tfidf_model[dictionary.doc2bow(text)] for text in texts]
-        index = similarities.MatrixSimilarity(corpus)
-        index.save("model/tfidf_index.index")
-    else:
-        index = similarities.MatrixSimilarity.load("model/tfidf_index.index")
+    index = similarities.MatrixSimilarity.load("model/tfidf_index.index")
+    texts = joblib.load("model/texts.pkl")
+    model_w2v = Word2Vec.load("model/w2v_model.pkl")
 
     return df, dictionary, tfidf_model, index, texts, model_w2v
-
-
-# 🧩 AUTO REBUILD TFIDF INDEX (for any number of parts)
-# ============================================================
-
-import os, zipfile
-
-zip_path = "model/tfidf_index_index.zip"
-target_file = "model/tfidf_index.index.index.npy"
-
-# Nếu file .npy chưa tồn tại thì giải nén
-if os.path.exists(zip_path) and not os.path.exists(target_file):
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall("model")
-    print("✅ Extracted tfidf_index_index.zip → model/")
-else:
-    print("⚙️ tfidf_index.index.index.npy ready.")
 
 
 
@@ -241,7 +197,6 @@ def recommend_hybrid(query, df, dictionary, tfidf_model, index, model_w2v, texts
     res = df.iloc[selected_idx][["Tiêu đề", "Giá", "Thương hiệu", "Loại xe"]].copy()
     res["similarity"] = np.round(sims_final[best_idx], 3)
     return res.reset_index(drop=True)
-
 # ============================================================
 # 🧭 SIDEBAR NAVIGATION
 # ============================================================
