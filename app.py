@@ -133,6 +133,21 @@ div[data-testid="stToolbar"] {
 </style>
 """, unsafe_allow_html=True)
 
+import os
+
+parts = ["model/tfidf_index_part_aa", "model/tfidf_index_part_ab"]
+output = "model/tfidf_index.zip"
+
+# Nối lại
+with open(output, "wb") as wfd:
+    for part in parts:
+        with open(part, "rb") as fd:
+            wfd.write(fd.read())
+
+# Giải nén
+import zipfile
+with zipfile.ZipFile(output, "r") as zip_ref:
+    zip_ref.extractall("model")
 
 
 # ============================================================
@@ -147,6 +162,26 @@ def load_model():
     texts = joblib.load("model/texts.pkl")
     model_w2v = Word2Vec.load("model/w2v_model.pkl")
     return df, dictionary, tfidf_model, index, texts, model_w2v
+
+# ============================================================
+# 🧩 RECONSTRUCT LARGE MODEL FILES IF SPLIT
+# ============================================================
+import zipfile
+
+combined_zip = "model/tfidf_index_combined.zip"
+parts = [f"model/{f}" for f in os.listdir("model") if f.startswith("tfidf_index_part_")]
+
+if parts and not os.path.exists("model/tfidf_index.index"):
+    parts.sort()
+    with open(combined_zip, "wb") as outfile:
+        for part in parts:
+            with open(part, "rb") as infile:
+                outfile.write(infile.read())
+    # Giải nén file zip để khôi phục lại index
+    with zipfile.ZipFile(combined_zip, "r") as zip_ref:
+        zip_ref.extractall("model")
+    print("✅ Reconstructed tfidf_index.index successfully.")
+
 
 df, dictionary, tfidf_model, index, texts, model_w2v = load_model()
 
