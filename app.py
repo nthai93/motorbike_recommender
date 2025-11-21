@@ -159,7 +159,8 @@ def load_model():
     import pickle
 
     try:
-        model_w2v = Word2Vec.load("model/w2v_model.pkl")
+        model_w2v = Word2Vec.load("model/w2v_model.model")
+
     except ValueError:
         with open("model/w2v_model.pkl", "rb") as f:
             model_w2v = pickle.load(f, encoding="latin1")
