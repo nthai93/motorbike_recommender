@@ -155,9 +155,17 @@ def load_model():
     tfidf_model = models.TfidfModel.load("model/tfidf_gensim.model")
     index = similarities.MatrixSimilarity.load("model/tfidf_index.index")
     texts = joblib.load("model/texts.pkl")
-    model_w2v = Word2Vec.load("model/w2v_model.pkl")
+    from gensim.models import Word2Vec
+    import pickle
+
+    try:
+        model_w2v = Word2Vec.load("model/w2v_model.pkl")
+    except ValueError:
+        with open("model/w2v_model.pkl", "rb") as f:
+            model_w2v = pickle.load(f, encoding="latin1")
 
     return df, dictionary, tfidf_model, index, texts, model_w2v
+
 
 
 
