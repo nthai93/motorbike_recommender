@@ -170,7 +170,7 @@ def load_model():
     dictionary = corpora.Dictionary.load("model/dictionary.dict")
     tfidf_model = models.TfidfModel.load("model/tfidf_gensim.model")
     texts = joblib.load("model/texts.pkl")   # <-- phải load trước khi build index
-    model_w2v = Word2Vec.load("model/w2v_model.pkl")
+    model_w2v = Word2Vec.load("model/w2v_model.model")
 
     # 🚀 Rebuild MatrixSimilarity if tfidf_index.index is missing
     if not os.path.exists("model/tfidf_index.index"):
