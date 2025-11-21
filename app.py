@@ -166,12 +166,23 @@ def load_model():
     except Exception as e:
         raise ValueError(f"❌ Error reading CSV ({enc}): {e}")
 
+    # --- Load core models ---
     dictionary = corpora.Dictionary.load("model/dictionary.dict")
     tfidf_model = models.TfidfModel.load("model/tfidf_gensim.model")
-    index = similarities.MatrixSimilarity.load("model/tfidf_index.index")
-    texts = joblib.load("model/texts.pkl")
+    texts = joblib.load("model/texts.pkl")   # <-- phải load trước khi build index
     model_w2v = Word2Vec.load("model/w2v_model.pkl")
+
+    # 🚀 Rebuild MatrixSimilarity if tfidf_index.index is missing
+    if not os.path.exists("model/tfidf_index.index"):
+        st.warning("⚙️ Rebuilding TF-IDF index (first time only)...")
+        corpus = [tfidf_model[dictionary.doc2bow(text)] for text in texts]
+        index = similarities.MatrixSimilarity(corpus)
+        index.save("model/tfidf_index.index")
+    else:
+        index = similarities.MatrixSimilarity.load("model/tfidf_index.index")
+
     return df, dictionary, tfidf_model, index, texts, model_w2v
+
 
 # 🧩 AUTO REBUILD TFIDF INDEX (for any number of parts)
 # ============================================================
