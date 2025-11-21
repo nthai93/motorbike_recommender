@@ -164,23 +164,17 @@ def load_model():
     return df, dictionary, tfidf_model, index, texts, model_w2v
 
 # ============================================================
-# 🧩 RECONSTRUCT LARGE MODEL FILES IF SPLIT
+# 🧩 AUTO-REBUILD TFIDF INDEX IF ONLY ONE ZIP FILE EXISTS
 # ============================================================
-import zipfile
+import os, zipfile
 
-combined_zip = "model/tfidf_index_combined.zip"
-parts = [f"model/{f}" for f in os.listdir("model") if f.startswith("tfidf_index_part_")]
+zip_path = "model/tfidf_index_part_00.zip"
+rebuild_path = "model/tfidf_index.index.index.npy"
 
-if parts and not os.path.exists("model/tfidf_index.index"):
-    parts.sort()
-    with open(combined_zip, "wb") as outfile:
-        for part in parts:
-            with open(part, "rb") as infile:
-                outfile.write(infile.read())
-    # Giải nén file zip để khôi phục lại index
-    with zipfile.ZipFile(combined_zip, "r") as zip_ref:
-        zip_ref.extractall("model")
-    print("✅ Reconstructed tfidf_index.index successfully.")
+if os.path.exists(zip_path) and not os.path.exists(rebuild_path):
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        zf.extractall("model")
+    print("✅ Unzipped tfidf_index.index.index.npy")
 
 
 df, dictionary, tfidf_model, index, texts, model_w2v = load_model()
