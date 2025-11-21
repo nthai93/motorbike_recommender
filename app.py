@@ -180,15 +180,10 @@ import zipfile, os
 zip_path = "model/tfidf_index_index.zip"
 target_path = "model/tfidf_index.index"
 
-# Nếu chưa có file index mà có zip → giải nén
-if not os.path.exists(target_path) and os.path.exists(zip_path):
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall("model")
-    print("✅ Unzipped tfidf_index_index.zip → tfidf_index.index")
-
-# Kiểm tra kết quả
-print("📁 Files in model folder:")
-print(os.listdir("model"))
+if not os.path.exists(target_path):
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        zf.extractall("model")
+    print("✅ Extracted tfidf_index.index from zip.")
 
 
 
