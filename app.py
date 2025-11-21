@@ -172,18 +172,19 @@ def load_model():
     return df, dictionary, tfidf_model, index, texts, model_w2v
 # 🧩 AUTO REBUILD TFIDF INDEX (for any number of parts)
 # ============================================================
-# ============================================================
-# 🧩 AUTO-UNZIP TFIDF INDEX (Compressed for GitHub)
-# ============================================================
-import zipfile, os
+
+import os, zipfile
 
 zip_path = "model/tfidf_index_index.zip"
-target_path = "model/tfidf_index.index"
+target_file = "model/tfidf_index.index.index.npy"
 
-if not os.path.exists(target_path):
+# Nếu file .npy chưa tồn tại thì giải nén
+if os.path.exists(zip_path) and not os.path.exists(target_file):
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall("model")
-    print("✅ Extracted tfidf_index.index from zip.")
+    print("✅ Extracted tfidf_index_index.zip → model/")
+else:
+    print("⚙️ tfidf_index.index.index.npy ready.")
 
 
 
