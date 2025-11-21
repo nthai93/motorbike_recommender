@@ -1,11 +1,19 @@
-pandas==2.2.3
-numpy==1.26.4
-scikit-learn==1.5.2
-gensim==4.3.3
-underthesea==6.8.4
-matplotlib==3.9.2
+# ===============================
+# 📦 REQUIREMENTS – Motorbike Recommender
+# ===============================
+pandas==2.3.2
+numpy==2.3.3
+scikit-learn==1.7.2
+gensim==4.4.0
+underthesea==8.3.0
+matplotlib==3.10.6
 seaborn==0.13.2
-joblib==1.4.2
+joblib==1.5.2
 streamlit==1.51.0
 openpyxl==3.1.5
-chardet
+chardet==5.2.0
+Unidecode==1.4.0
+
+# Optional (cho build Cloud ổn định)
+fastparquet==2024.11.0
+smart_open==7.4.4
