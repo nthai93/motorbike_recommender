@@ -132,6 +132,15 @@ div[data-testid="stToolbar"] {
 }
 </style>
 """, unsafe_allow_html=True)
+# --- Nếu chỉ có file .npy thì tạo bản .index đúng chuẩn gensim ---
+import os, shutil
+
+npy_path = "model/tfidf_index.index.index.npy"
+gensim_index_path = "model/tfidf_index.index"
+
+if os.path.exists(npy_path) and not os.path.exists(gensim_index_path):
+    shutil.move(npy_path, gensim_index_path)
+    st.success("✅ Renamed tfidf_index.index.index.npy → tfidf_index.index")
 
 
 # ============================================================
