@@ -146,23 +146,25 @@ if os.path.exists(npy_path) and not os.path.exists(gensim_index_path):
 # ============================================================
 # 🔧 LOAD MODEL
 # ============================================================
+# ============================================================
+# 🔧 LOAD MODEL (SAFE)
+# ============================================================
 @st.cache_resource
 def load_model():
-    import io
+    import chardet
+    data_path = "data/motorbike_clean.csv"
 
-    file_path = "data/motorbike_clean.csv"
+    # --- Detect encoding ---
+    with open(data_path, 'rb') as f:
+        raw = f.read(200000)
+    enc = chardet.detect(raw)['encoding']
 
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"❌ File not found: {file_path}")
-
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        content = f.read().strip()
-
-    if not content:
-        raise ValueError("❌ CSV file is empty or unreadable. Check encoding or upload again.")
-
-    df = pd.read_csv(io.StringIO(content))
-    print(f"✅ Loaded dataset successfully: {df.shape}")
+    try:
+        df = pd.read_csv(data_path, encoding=enc)
+        if df.empty:
+            raise ValueError("❌ CSV file is empty.")
+    except Exception as e:
+        raise ValueError(f"❌ Error reading CSV ({enc}): {e}")
 
     dictionary = corpora.Dictionary.load("model/dictionary.dict")
     tfidf_model = models.TfidfModel.load("model/tfidf_gensim.model")
@@ -170,6 +172,7 @@ def load_model():
     texts = joblib.load("model/texts.pkl")
     model_w2v = Word2Vec.load("model/w2v_model.pkl")
     return df, dictionary, tfidf_model, index, texts, model_w2v
+
 # 🧩 AUTO REBUILD TFIDF INDEX (for any number of parts)
 # ============================================================
 
